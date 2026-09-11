@@ -20,7 +20,7 @@ backend/debug_profile.py
 backend/test_deals.ps1
 
 # ============================
-# Node / Frontend (redundante, mas garante)
+# Node / Frontend
 # ============================
 node_modules/
 frontend/node_modules/
