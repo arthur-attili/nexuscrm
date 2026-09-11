@@ -4,7 +4,7 @@ CRM customizável com automações, campos personalizáveis e integração com n
 
 ---
 
-## 🧱 Stack
+## Stack
 
 | Camada | Tecnologia |
 |---|---|
@@ -17,7 +17,7 @@ CRM customizável com automações, campos personalizáveis e integração com n
 
 ---
 
-## 📁 Estrutura do Projeto
+## Estrutura do Projeto
 
 ```
 CRM/
@@ -33,7 +33,7 @@ CRM/
 │   │   │   └── api_keys/       # Chaves de API (a implementar)
 │   │   └── shared/             # Código compartilhado
 │   ├── requirements.txt
-│   └── .env                    # ⚠️ NÃO vai pro Git (criar manualmente)
+│   └── .env                    # NÃO vai pro Git (criar manualmente)
 │
 └── frontend/                   # Interface Next.js
     ├── src/
@@ -51,19 +51,19 @@ CRM/
     │   │   ├── api/            # Cliente HTTP para o backend
     │   │   └── supabase/       # Clientes Supabase (browser/server)
     │   └── middleware.ts       # Proteção de rotas
-    └── .env.local              # ⚠️ NÃO vai pro Git (criar manualmente)
+    └── .env.local              # NÃO vai pro Git (criar manualmente)
 ```
 
 ---
 
-## 🚀 Setup em um novo PC
+## Setup em um novo PC
 
 ### Pré-requisitos
 
 Instale, se ainda não tiver:
 
 - **Python 3.12** → https://www.python.org/downloads/release/python-3129/
-  - ⚠️ Marque **"Add Python to PATH"** durante a instalação
+  - Marque **"Add Python to PATH"** durante a instalação
 - **Node.js 20+** → https://nodejs.org/
 - **Git** → https://git-scm.com/download/win
 
@@ -141,7 +141,7 @@ O frontend estará em: **http://localhost:3000**
 
 ---
 
-## 🧠 Como o projeto funciona
+## Como o projeto funciona
 
 ### Fluxo de autenticação
 
@@ -187,28 +187,28 @@ Cada domínio (`leads`, `deals`, etc.) tem a mesma estrutura:
 
 | Domínio | Status |
 |---|---|
-| `profiles` | ✅ Completo |
-| `pipelines` + `stages` | ✅ Completo |
-| `leads` | ✅ Completo |
-| `deals` | ✅ Completo |
-| `custom_fields` | ✅ Completo |
-| `api_keys` | ⏳ Pendente |
-| Automações (n8n) | ⏳ Pendente |
+| `profiles` | Completo |
+| `pipelines` + `stages` | Completo |
+| `leads` | Completo |
+| `deals` | Completo |
+| `custom_fields` | Completo |
+| `api_keys` | Pendente |
+| Automações (n8n) | Pendente |
 
 ### Frontend (Next.js)
 
 | Tela | Status |
 |---|---|
-| Login / Logout | ✅ Completo |
-| Layout (sidebar + header) | ✅ Completo |
-| Dashboard | 🟡 Placeholder |
-| Leads — listagem | ✅ Completo |
-| Leads — criar | ⏳ Em andamento |
-| Leads — busca e paginação | ⏳ Pendente |
-| Leads — detalhes | ⏳ Pendente |
-| Deals (Kanban) | ⏳ Pendente |
-| Pipelines | ⏳ Pendente |
-| Configurações | ⏳ Pendente |
+| Login / Logout | Completo |
+| Layout (sidebar + header) | Completo |
+| Dashboard | Placeholder |
+| Leads — listagem | Completo |
+| Leads — criar | Em andamento |
+| Leads — busca e paginação | Pendente |
+| Leads — detalhes | Pendente |
+| Deals (Kanban) | Pendente |
+| Pipelines | Pendente |
+| Configurações | Pendente |
 
 ---
 
@@ -235,7 +235,7 @@ Campos JSONB importantes:
 
 ---
 
-## 🔐 Segurança
+## Segurança
 
 ### Arquivos que **NUNCA** vão para o Git
 
@@ -253,7 +253,7 @@ Campos JSONB importantes:
 
 ---
 
-## 🛠️ Comandos úteis
+## Comandos úteis
 
 ### Backend
 
@@ -311,7 +311,7 @@ git push
 
 ---
 
-## 📌 Decisões de design
+## Decisões de design
 
 - **Backend em Python + FastAPI** para integração fácil com **n8n** (automações)
 - **Frontend em Next.js** com App Router + Server Components (menos JS no cliente)
@@ -322,7 +322,7 @@ git push
 
 ---
 
-## 📅 Roadmap
+## Roadmap
 
 - [x] Autenticação com Supabase
 - [x] CRUD de perfis
@@ -340,6 +340,6 @@ git push
 
 ---
 
-## 📞 Suporte
+## Suporte
 
 Este projeto está em desenvolvimento ativo. Para dúvidas ou bugs, abra uma issue no repositório.
