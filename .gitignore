@@ -1,0 +1,45 @@
+# ============================
+# Python / Backend
+# ============================
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.pytest_cache/
+
+# Variáveis de ambiente (CRÍTICO - nunca commitar)
+.env
+.env.local
+.env.*.local
+backend/.env
+
+# Scripts de debug/testes locais
+backend/debug_profile.py
+backend/test_deals.ps1
+
+# ============================
+# Node / Frontend (redundante, mas garante)
+# ============================
+node_modules/
+frontend/node_modules/
+frontend/.next/
+frontend/out/
+frontend/build/
+
+# ============================
+# IDE / OS
+# ============================
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# ============================
+# Logs
+# ============================
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
