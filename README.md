@@ -78,7 +78,7 @@ git --version
 ### 1. Clonar o repositório
 
 ```powershell
-cd C:\Users\SEU_USUARIO\Documents\projetos
+cd C:\Users\SEU_USUARIO\Documents\
 git clone https://github.com/SEU_USUARIO/nexuscrm.git
 cd nexuscrm
 ```
@@ -90,7 +90,7 @@ Esses arquivos **não estão no Git** por segurança. Você precisa recriá-los.
 #### `backend/.env`
 
 ```env
-SUPABASE_URL=https://adbptjrojslxghdpyuwf.supabase.co
+SUPABASE_URL=https://abcdefghijklmnopqrs.supabase.co
 SUPABASE_SERVICE_KEY=<cole_aqui_a_service_role_key_do_supabase>
 ```
 
@@ -100,7 +100,7 @@ SUPABASE_SERVICE_KEY=<cole_aqui_a_service_role_key_do_supabase>
 #### `frontend/.env.local`
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://adbptjrojslxghdpyuwf.supabase.co
+NEXT_PUBLIC_SUPABASE_URL=https://abcdefghijklmnopqrs.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<cole_aqui_a_anon_key_do_supabase>
 NEXT_PUBLIC_API_URL=http://127.0.0.1:8000
 ```
@@ -181,7 +181,7 @@ Cada domínio (`leads`, `deals`, etc.) tem a mesma estrutura:
 
 ---
 
-## 📊 Status do desenvolvimento
+## Status do desenvolvimento
 
 ### Backend (FastAPI)
 
@@ -212,7 +212,7 @@ Cada domínio (`leads`, `deals`, etc.) tem a mesma estrutura:
 
 ---
 
-## 🗄️ Estrutura do banco de dados
+## Estrutura do banco de dados
 
 Principais tabelas no Supabase:
 
@@ -293,7 +293,7 @@ git push
 
 ---
 
-## 📝 Notas de desenvolvimento
+## Notas de desenvolvimento
 
 ### Erros comuns
 
