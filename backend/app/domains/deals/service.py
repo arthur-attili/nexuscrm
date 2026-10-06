@@ -9,12 +9,14 @@ Regras implementadas:
 - Ao mudar status para 'won': stage auto = is_won, probability = 100.
 - Ao mudar status para 'lost': stage auto = is_lost, probability = 0.
 - Vendedor vê apenas os seus deals. Admin/gerente veem todos.
+- custom_values são validados contra os custom_fields do target 'deal'.
 """
 
 from __future__ import annotations
 
 from fastapi import HTTPException, status
 
+from app.domains.custom_fields.validator import CustomFieldValidator
 from app.domains.deals.entities import (
     Deal,
     DealCreate,
@@ -36,11 +38,13 @@ class DealService:
         lead_repo: LeadRepository | None = None,
         pipeline_repo: PipelineRepository | None = None,
         stage_repo: StageRepository | None = None,
+        custom_validator: CustomFieldValidator | None = None,
     ):
         self.repo = repo or DealRepository()
         self.lead_repo = lead_repo or LeadRepository()
         self.pipeline_repo = pipeline_repo or PipelineRepository()
         self.stage_repo = stage_repo or StageRepository()
+        self.custom_validator = custom_validator or CustomFieldValidator()
 
     # --------------------------------------------------------
     # Helpers de acesso
@@ -193,6 +197,11 @@ class DealService:
         """Cria um novo deal e marca o lead como 'converted'."""
         data = payload.model_dump(mode="json")
 
+        # Valida e normaliza custom_values contra os custom_fields definidos.
+        data["custom_values"] = self.custom_validator.validate(
+            "deal", data.get("custom_values") or {}
+        )
+
         # Valida lead
         self._validate_lead(data["lead_id"])
 
@@ -220,7 +229,6 @@ class DealService:
         created = self.repo.create(data)
 
         # Marca o lead como convertido.
-        # Usamos update direto no repositório de leads para não acoplar com regras.
         self.lead_repo.update(data["lead_id"], {"status": "converted"})
 
         return Deal(**created)
@@ -234,10 +242,18 @@ class DealService:
     ) -> Deal:
         """Atualiza um deal existente."""
         existing = self.get_deal(deal_id, current)  # já valida acesso
-        data = payload.model_dump(mode="json", exclude_unset=True, exclude_none=True)
+        data = payload.model_dump(
+            mode="json", exclude_unset=True, exclude_none=True
+        )
 
         if not data:
             return existing
+
+        # Valida custom_values se foram informados.
+        if "custom_values" in data:
+            data["custom_values"] = self.custom_validator.validate(
+                "deal", data["custom_values"] or {}
+            )
 
         # --- Validação de transição de status ---
         if "status" in data:

@@ -4,6 +4,7 @@ Serviço de Leads: regras de negócio.
 
 from fastapi import HTTPException, status
 
+from app.domains.custom_fields.validator import CustomFieldValidator
 from app.domains.leads.entities import (
     Lead,
     LeadCreate,
@@ -23,10 +24,12 @@ class LeadService:
         repo: LeadRepository | None = None,
         pipeline_repo: PipelineRepository | None = None,
         stage_repo: StageRepository | None = None,
+        custom_validator: CustomFieldValidator | None = None,
     ):
         self.repo = repo or LeadRepository()
         self.pipeline_repo = pipeline_repo or PipelineRepository()
         self.stage_repo = stage_repo or StageRepository()
+        self.custom_validator = custom_validator or CustomFieldValidator()
 
     # --------------------------------------------------------
     # Helpers de acesso
@@ -140,7 +143,12 @@ class LeadService:
 
     def create_lead(self, payload: LeadCreate, current: CurrentUser) -> Lead:
         """Cria um novo lead com owner_id = usuário logado."""
-        data = payload.model_dump()
+        data = payload.model_dump(mode="json")
+
+        # Valida e normaliza custom_values contra os custom_fields definidos.
+        data["custom_values"] = self.custom_validator.validate(
+            "lead", data.get("custom_values") or {}
+        )
 
         # O dono é SEMPRE o usuário autenticado, nunca o cliente.
         data["owner_id"] = current.id
@@ -162,7 +170,15 @@ class LeadService:
         # get_lead já valida acesso.
         self.get_lead(lead_id, current)
 
-        data = payload.model_dump(exclude_unset=True, exclude_none=True)
+        data = payload.model_dump(
+            mode="json", exclude_unset=True, exclude_none=True
+        )
+
+        # Valida custom_values se foram informados.
+        if "custom_values" in data:
+            data["custom_values"] = self.custom_validator.validate(
+                "lead", data["custom_values"] or {}
+            )
 
         # Valida pipeline/stage se algum dos dois foi informado.
         if "pipeline_id" in data or "stage_id" in data:

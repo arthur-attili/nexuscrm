@@ -25,11 +25,13 @@ class DealRepository:
         page_size: int = 20,
     ) -> tuple[list[dict], int]:
         """
-        Lista deals com filtros opcionais e paginação.
-
-        Retorna (items, total).
+        Lista deals com filtros, paginação e join com leads (nome do lead).
         """
-        query = supabase.table(self.TABLE).select("*", count="exact")
+        # Join: traz deals.* + o nome do lead em `lead:leads(name)`
+        query = (
+            supabase.table(self.TABLE)
+            .select("*, lead:leads(name)", count="exact")
+        )
 
         if owner_id:
             query = query.eq("owner_id", owner_id)
@@ -49,16 +51,29 @@ class DealRepository:
         query = query.range(start, end)
 
         response = query.execute()
-        return response.data or [], response.count or 0
+        items = response.data or []
+
+        # Achata o `lead` aninhado para `lead_name` no dict
+        for item in items:
+            lead = item.pop("lead", None) or {}
+            item["lead_name"] = lead.get("name")
+
+        return items, response.count or 0
 
     def get_by_id(self, deal_id: str) -> Optional[dict]:
-        """Busca um deal por ID."""
+        """Busca um deal por ID (com nome do lead)."""
         response = (
-            supabase.table(self.TABLE).select("*").eq("id", deal_id).execute()
+            supabase.table(self.TABLE)
+            .select("*, lead:leads(name)")
+            .eq("id", deal_id)
+            .execute()
         )
         if not response.data:
             return None
-        return response.data[0]
+        item = response.data[0]
+        lead = item.pop("lead", None) or {}
+        item["lead_name"] = lead.get("name")
+        return item
 
     def get_by_lead(self, lead_id: str) -> list[dict]:
         """
@@ -67,11 +82,15 @@ class DealRepository:
         """
         response = (
             supabase.table(self.TABLE)
-            .select("*")
+            .select("*, lead:leads(name)")
             .eq("lead_id", lead_id)
             .execute()
         )
-        return response.data or []
+        items = response.data or []
+        for item in items:
+            lead = item.pop("lead", None) or {}
+            item["lead_name"] = lead.get("name")
+        return items
 
     def create(self, data: dict) -> dict:
         """Cria um novo deal."""

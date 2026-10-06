@@ -60,6 +60,7 @@ class Deal(DealBase):
     id: str
     owner_id: Optional[str] = None
     status: DealStatus = "open"
+    lead_name: Optional[str] = None
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 

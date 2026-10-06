@@ -1,5 +1,5 @@
 import { apiFetch } from "./client";
-import type { LeadListResponse } from "./types";
+import type { Lead, LeadListResponse } from "./types";
 
 export type ListLeadsParams = {
   page?: number;
@@ -24,4 +24,29 @@ export async function listLeads(
 
   const query = qs.toString();
   return apiFetch<LeadListResponse>(`/leads${query ? `?${query}` : ""}`);
+}
+
+export async function getLead(id: string): Promise<Lead> {
+  return apiFetch<Lead>(`/leads/${id}`);
+}
+
+export type UpdateLeadInput = {
+  name?: string;
+  source?: string | null;
+  status?: string;
+  contact_info?: Record<string, unknown>;
+};
+
+export async function updateLead(
+  id: string,
+  data: UpdateLeadInput,
+): Promise<Lead> {
+  return apiFetch<Lead>(`/leads/${id}`, {
+    method: "PATCH",
+    body: JSON.stringify(data),
+  });
+}
+
+export async function deleteLead(id: string): Promise<void> {
+  return apiFetch<void>(`/leads/${id}`, { method: "DELETE" });
 }
