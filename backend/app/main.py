@@ -37,12 +37,13 @@ app = FastAPI(
 )
 
 # --- Rate limiting (antes do CORS para valer para tudo) ---
-app.add_middleware(
-    RateLimitMiddleware,
-    max_requests=200,      # 200 req/min por IP em produção
-    window_seconds=60,
-    exclude_paths=["/health", "/docs", "/openapi.json", "/redoc"],
-)
+if settings.is_production:
+    app.add_middleware(
+        RateLimitMiddleware,
+        max_requests=200,
+        window_seconds=60,
+        exclude_paths=["/health", "/docs", "/openapi.json", "/redoc"],
+    )
 
 # --- CORS dinâmico (via env var CORS_ORIGINS) ---
 app.add_middleware(
