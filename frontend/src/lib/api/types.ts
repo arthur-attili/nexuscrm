@@ -248,3 +248,41 @@ export interface Activity {
   created_at: string | null;
   updated_at: string | null;
 }
+
+// ============================================================
+// Webhooks
+// ============================================================
+
+export type WebhookEvent =
+  | "lead.created"
+  | "lead.updated"
+  | "deal.created"
+  | "deal.updated"
+  | "deal.status_changed"
+  | "note.created";
+
+export interface Webhook {
+  id: string;
+  name: string;
+  url: string;
+  secret: string;
+  events: string[];
+  is_active: boolean;
+  owner_id: string;
+  created_at: string | null;
+  updated_at: string | null;
+}
+
+export interface WebhookDelivery {
+  id: string;
+  webhook_id: string;
+  event: string;
+  payload: Record<string, unknown>;
+  response_status: number | null;
+  response_body: string | null;
+  success: boolean;
+  attempts: number;
+  error: string | null;
+  created_at: string | null;
+  completed_at: string | null;
+}

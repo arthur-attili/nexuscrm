@@ -13,6 +13,7 @@ from app.domains.leads.entities import (
 )
 from app.domains.leads.repository import LeadRepository
 from app.domains.pipelines.repository import PipelineRepository, StageRepository
+from app.domains.webhooks.dispatcher import dispatch_event
 from app.shared.dependencies import CurrentUser
 
 
@@ -36,11 +37,6 @@ class LeadService:
     # --------------------------------------------------------
 
     def _ensure_can_access(self, lead_data: dict, current: CurrentUser) -> None:
-        """
-        Verifica se o usuário pode ver/editar um lead específico.
-        - Admin/Gerente: sempre.
-        - Vendedor: apenas se for o dono.
-        """
         if current.can_see_all_leads:
             return
         if lead_data.get("owner_id") != current.id:
@@ -50,18 +46,10 @@ class LeadService:
             )
 
     # --------------------------------------------------------
-    # Validações de pipeline/stage
+    # Validações
     # --------------------------------------------------------
 
     def _validate_pipeline_and_stage(self, data: dict) -> None:
-        """
-        Valida coerência entre pipeline_id e stage_id.
-
-        Regras:
-        - Se pipeline_id informado, precisa existir.
-        - Se stage_id informado, precisa existir.
-        - Se ambos informados, a stage precisa pertencer ao pipeline.
-        """
         pipeline_id = data.get("pipeline_id")
         stage_id = data.get("stage_id")
 
@@ -85,7 +73,7 @@ class LeadService:
                 )
 
     # --------------------------------------------------------
-    # Listagem
+    # Listagem e busca
     # --------------------------------------------------------
 
     def list_leads(
@@ -98,11 +86,6 @@ class LeadService:
         page: int = 1,
         page_size: int = 20,
     ) -> LeadList:
-        """
-        Lista leads com filtros e paginação.
-
-        Vendedor: vê apenas os seus. Admin/Gerente: veem todos.
-        """
         owner_filter = None if current.can_see_all_leads else current.id
 
         items, total = self.repo.list(
@@ -122,12 +105,7 @@ class LeadService:
             page_size=page_size,
         )
 
-    # --------------------------------------------------------
-    # Busca individual
-    # --------------------------------------------------------
-
     def get_lead(self, lead_id: str, current: CurrentUser) -> Lead:
-        """Busca um lead e valida acesso."""
         data = self.repo.get_by_id(lead_id)
         if not data:
             raise HTTPException(
@@ -142,22 +120,36 @@ class LeadService:
     # --------------------------------------------------------
 
     def create_lead(self, payload: LeadCreate, current: CurrentUser) -> Lead:
-        """Cria um novo lead com owner_id = usuário logado."""
         data = payload.model_dump(mode="json")
 
-        # Valida e normaliza custom_values contra os custom_fields definidos.
         data["custom_values"] = self.custom_validator.validate(
             "lead", data.get("custom_values") or {}
         )
 
-        # O dono é SEMPRE o usuário autenticado, nunca o cliente.
         data["owner_id"] = current.id
 
-        # Valida pipeline/stage, se informados.
         self._validate_pipeline_and_stage(data)
 
         created = self.repo.create(data)
-        return Lead(**created)
+        lead = Lead(**created)
+
+        # Dispara webhook (fire-and-forget)
+        dispatch_event(
+            owner_id=current.id,
+            event="lead.created",
+            payload={
+                "id": lead.id,
+                "name": lead.name,
+                "status": lead.status,
+                "source": lead.source,
+                "owner_id": lead.owner_id,
+                "contact_info": lead.contact_info,
+                "custom_values": lead.custom_values,
+                "created_at": lead.created_at.isoformat() if lead.created_at else None,
+            },
+        )
+
+        return lead
 
     # --------------------------------------------------------
     # Atualização
@@ -166,21 +158,17 @@ class LeadService:
     def update_lead(
         self, lead_id: str, payload: LeadUpdate, current: CurrentUser
     ) -> Lead:
-        """Atualiza um lead existente."""
-        # get_lead já valida acesso.
         self.get_lead(lead_id, current)
 
         data = payload.model_dump(
             mode="json", exclude_unset=True, exclude_none=True
         )
 
-        # Valida custom_values se foram informados.
         if "custom_values" in data:
             data["custom_values"] = self.custom_validator.validate(
                 "lead", data["custom_values"] or {}
             )
 
-        # Valida pipeline/stage se algum dos dois foi informado.
         if "pipeline_id" in data or "stage_id" in data:
             self._validate_pipeline_and_stage(data)
 
@@ -190,15 +178,29 @@ class LeadService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Lead não encontrado.",
             )
-        return Lead(**updated)
+        lead = Lead(**updated)
+
+        # Dispara webhook
+        dispatch_event(
+            owner_id=current.id,
+            event="lead.updated",
+            payload={
+                "id": lead.id,
+                "name": lead.name,
+                "status": lead.status,
+                "source": lead.source,
+                "owner_id": lead.owner_id,
+                "updated_fields": list(data.keys()),
+            },
+        )
+
+        return lead
 
     # --------------------------------------------------------
     # Remoção
     # --------------------------------------------------------
 
     def delete_lead(self, lead_id: str, current: CurrentUser) -> None:
-        """Remove um lead."""
-        # get_lead já valida acesso.
         self.get_lead(lead_id, current)
         deleted = self.repo.delete(lead_id)
         if not deleted:

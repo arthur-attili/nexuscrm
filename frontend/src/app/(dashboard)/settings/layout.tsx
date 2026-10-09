@@ -2,7 +2,12 @@ import { getMyProfile } from "@/lib/api/profile";
 import type { Profile } from "@/lib/api/types";
 import { SettingsTabs } from "./settings-tabs";
 
-type TabSegment = "profile" | "custom-fields" | "pipelines" | "api-keys";
+type TabSegment =
+  | "profile"
+  | "custom-fields"
+  | "pipelines"
+  | "api-keys"
+  | "webhooks";
 
 export default async function SettingsLayout({
   children,
@@ -18,11 +23,12 @@ export default async function SettingsLayout({
 
   const isAdmin = profile?.role === "admin";
 
-  // api-keys fica visível para todos (cada um gerencia as suas)
-  const segments: TabSegment[] = ["profile", "api-keys"];
+  // API Keys fica visível para todos. Admin vê também os outros.
+  const segments: TabSegment[] = ["profile"];
   if (isAdmin) {
-    segments.splice(1, 0, "custom-fields", "pipelines");
+    segments.push("custom-fields", "pipelines", "webhooks");
   }
+  segments.push("api-keys");
 
   return (
     <div>

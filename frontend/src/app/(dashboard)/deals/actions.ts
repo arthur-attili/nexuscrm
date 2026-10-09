@@ -62,6 +62,7 @@ export async function createDealAction(
   }
 
   revalidatePath("/deals");
+  revalidatePath("/pipelines");
   return { success: true };
 }
 
@@ -130,6 +131,7 @@ export async function updateDealAction(
 
   revalidatePath("/deals");
   revalidatePath(`/deals/${dealId}`);
+  revalidatePath("/pipelines");
   return { success: true };
 }
 
@@ -145,7 +147,8 @@ export type MoveDealState = {
 export async function moveDeal(
   dealId: string,
   newStageId: string,
-  newStatus?: "open" | "won" | "lost",
+  newStatus: "open" | "won" | "lost" | undefined,
+  revalidatePathname: string = "/deals",
 ): Promise<MoveDealState> {
   try {
     await updateDeal(dealId, {
@@ -159,7 +162,9 @@ export async function moveDeal(
     return { error: "Erro ao mover negócio. Tente novamente." };
   }
 
+  revalidatePath(revalidatePathname);
   revalidatePath("/deals");
+  revalidatePath("/pipelines");
   return { success: true };
 }
 

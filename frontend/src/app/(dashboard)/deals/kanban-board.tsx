@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState, useTransition } from "react";
 import {
   DndContext,
   DragEndEvent,
@@ -19,35 +19,35 @@ import { moveDeal } from "./actions";
 type Props = {
   stages: Stage[];
   deals: Deal[];
+  revalidatePathname?: string;
 };
 
-export function KanbanBoard({ stages, deals }: Props) {
-  // Estado local para optimistic update
+export function KanbanBoard({
+  stages,
+  deals,
+  revalidatePathname = "/deals",
+}: Props) {
   const [localDeals, setLocalDeals] = useState<Deal[]>(deals);
   const [activeDeal, setActiveDeal] = useState<Deal | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
 
-// Cria uma "assinatura" dos deals que muda apenas quando dados relevantes mudam.
-// Isso evita re-sincronizar em re-renders cosméticos.
-const dealsSignature = useMemo(
+  const dealsSignature = useMemo(
     () =>
       deals
         .map((d) => `${d.id}:${d.stage_id}:${d.status}:${d.value}`)
         .sort()
         .join("|"),
     [deals],
-);
+  );
 
-// Sincroniza o estado local quando o servidor manda dados novos.
-// Isso resolve o problema de "só aparece após recarregar".
-    useEffect(() => {
-        setLocalDeals(deals);
-}, [dealsSignature, deals]);
+  useEffect(() => {
+    setLocalDeals(deals);
+  }, [dealsSignature, deals]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: { distance: 5 }, // Evita drag acidental em cliques
+      activationConstraint: { distance: 5 },
     }),
   );
 
@@ -68,17 +68,15 @@ const dealsSignature = useMemo(
 
     const deal = localDeals.find((d) => d.id === dealId);
     if (!deal) return;
-    if (deal.stage_id === newStageId) return; // Não mudou nada
+    if (deal.stage_id === newStageId) return;
 
     const newStage = stages.find((s) => s.id === newStageId);
     if (!newStage) return;
 
-    // Descobre o novo status baseado na stage destino
     let newStatus: "open" | "won" | "lost" = "open";
     if (newStage.is_won) newStatus = "won";
     else if (newStage.is_lost) newStatus = "lost";
 
-    // Otimistic update: move imediatamente na UI
     const previousDeals = localDeals;
     setLocalDeals((prev) =>
       prev.map((d) =>
@@ -86,18 +84,21 @@ const dealsSignature = useMemo(
       ),
     );
 
-    // Chama o servidor
     startTransition(async () => {
-      const result = await moveDeal(dealId, newStageId, newStatus);
+      const result = await moveDeal(
+        dealId,
+        newStageId,
+        newStatus,
+        revalidatePathname,
+      );
       if (result.error) {
-        // Reverte em caso de erro
         setLocalDeals(previousDeals);
         setError(result.error);
+        setTimeout(() => setError(null), 4000);
       }
     });
   }
 
-  // Agrupa deals por stage_id
   const dealsByStage = new Map<string, Deal[]>();
   for (const stage of stages) dealsByStage.set(stage.id, []);
   for (const deal of localDeals) {
@@ -109,7 +110,8 @@ const dealsSignature = useMemo(
   return (
     <>
       {error && (
-        <div className="mb-4 bg-red-950/40 border border-red-800 text-red-300 rounded-md px-4 py-2 text-sm">
+        <div className="mb-4 bg-red-950/40 border border-red-800 text-red-300 rounded-md px-4 py-2 text-sm flex items-center gap-2">
+          <span className="font-medium">Não foi possível mover:</span>
           {error}
         </div>
       )}

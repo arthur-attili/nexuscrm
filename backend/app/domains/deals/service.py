@@ -1,15 +1,5 @@
 """
 Serviço de Deals: regras de negócio.
-
-Regras implementadas:
-- Todo deal tem um lead (validado na criação).
-- Um lead pode ter N deals (cenário B).
-- Ao criar um deal, o lead é marcado como 'converted'.
-- Status: 'open' → 'won'/'lost'. 'won'/'lost' são finais.
-- Ao mudar status para 'won': stage auto = is_won, probability = 100.
-- Ao mudar status para 'lost': stage auto = is_lost, probability = 0.
-- Vendedor vê apenas os seus deals. Admin/gerente veem todos.
-- custom_values são validados contra os custom_fields do target 'deal'.
 """
 
 from __future__ import annotations
@@ -26,6 +16,7 @@ from app.domains.deals.entities import (
 from app.domains.deals.repository import DealRepository
 from app.domains.leads.repository import LeadRepository
 from app.domains.pipelines.repository import PipelineRepository, StageRepository
+from app.domains.webhooks.dispatcher import dispatch_event
 from app.shared.dependencies import CurrentUser
 
 
@@ -47,11 +38,10 @@ class DealService:
         self.custom_validator = custom_validator or CustomFieldValidator()
 
     # --------------------------------------------------------
-    # Helpers de acesso
+    # Helpers
     # --------------------------------------------------------
 
     def _ensure_can_access(self, deal_data: dict, current: CurrentUser) -> None:
-        """Admin/gerente: sempre. Vendedor: apenas se for o dono."""
         if current.can_see_all_leads:
             return
         if deal_data.get("owner_id") != current.id:
@@ -60,12 +50,7 @@ class DealService:
                 detail="Você não tem permissão para acessar este negócio.",
             )
 
-    # --------------------------------------------------------
-    # Validações
-    # --------------------------------------------------------
-
     def _validate_lead(self, lead_id: str) -> dict:
-        """Garante que o lead existe. Retorna o lead."""
         lead = self.lead_repo.get_by_id(lead_id)
         if not lead:
             raise HTTPException(
@@ -77,11 +62,6 @@ class DealService:
     def _validate_pipeline_and_stage(
         self, pipeline_id: str, stage_id: str | None
     ) -> None:
-        """
-        Valida coerência entre pipeline e stage.
-        - pipeline precisa existir.
-        - se stage informada, precisa existir e pertencer ao pipeline.
-        """
         if not self.pipeline_repo.get_by_id(pipeline_id):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -102,10 +82,6 @@ class DealService:
                 )
 
     def _get_first_stage(self, pipeline_id: str) -> dict:
-        """
-        Retorna a primeira stage de um pipeline (menor 'order').
-        Usada quando o cliente cria um deal sem informar stage_id.
-        """
         stages = self.stage_repo.list_by_pipeline(pipeline_id)
         if not stages:
             raise HTTPException(
@@ -117,12 +93,6 @@ class DealService:
     def _resolve_stage_for_status(
         self, pipeline_id: str, new_status: str
     ) -> dict | None:
-        """
-        Quando o status muda para 'won' ou 'lost', resolve a stage
-        correspondente (is_won / is_lost) do pipeline.
-
-        Retorna a stage ou None se não existir no pipeline.
-        """
         if new_status == "won":
             return self.stage_repo.get_won_stage(pipeline_id)
         if new_status == "lost":
@@ -132,12 +102,8 @@ class DealService:
     def _validate_status_transition(
         self, current_status: str, new_status: str
     ) -> None:
-        """
-        'open' pode ir para 'won' ou 'lost'.
-        'won' e 'lost' são finais.
-        """
         if current_status == new_status:
-            return  # idempotente
+            return
         if current_status in ("won", "lost"):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -158,7 +124,6 @@ class DealService:
         page: int = 1,
         page_size: int = 20,
     ) -> DealList:
-        """Lista deals com filtros e paginação."""
         owner_filter = None if current.can_see_all_leads else current.id
 
         items, total = self.repo.list(
@@ -179,7 +144,6 @@ class DealService:
         )
 
     def get_deal(self, deal_id: str, current: CurrentUser) -> Deal:
-        """Busca um deal e valida acesso."""
         data = self.repo.get_by_id(deal_id)
         if not data:
             raise HTTPException(
@@ -194,25 +158,20 @@ class DealService:
     # --------------------------------------------------------
 
     def create_deal(self, payload: DealCreate, current: CurrentUser) -> Deal:
-        """Cria um novo deal e marca o lead como 'converted'."""
         data = payload.model_dump(mode="json")
 
-        # Valida e normaliza custom_values contra os custom_fields definidos.
         data["custom_values"] = self.custom_validator.validate(
             "deal", data.get("custom_values") or {}
         )
 
-        # Valida lead
         self._validate_lead(data["lead_id"])
 
-        # Valida pipeline
         if not self.pipeline_repo.get_by_id(data["pipeline_id"]):
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Pipeline informado não existe.",
             )
 
-        # Se não informou stage, pega a primeira do pipeline.
         if not data.get("stage_id"):
             first_stage = self._get_first_stage(data["pipeline_id"])
             data["stage_id"] = first_stage["id"]
@@ -221,17 +180,32 @@ class DealService:
                 data["pipeline_id"], data["stage_id"]
             )
 
-        # Owner é o usuário logado.
         data["owner_id"] = current.id
-        # Status sempre inicia como 'open'.
         data["status"] = "open"
 
         created = self.repo.create(data)
-
-        # Marca o lead como convertido.
         self.lead_repo.update(data["lead_id"], {"status": "converted"})
 
-        return Deal(**created)
+        deal = Deal(**created)
+
+        # Dispara webhook
+        dispatch_event(
+            owner_id=current.id,
+            event="deal.created",
+            payload={
+                "id": deal.id,
+                "lead_id": deal.lead_id,
+                "lead_name": deal.lead_name,
+                "value": str(deal.value),
+                "status": deal.status,
+                "stage_id": deal.stage_id,
+                "pipeline_id": deal.pipeline_id,
+                "owner_id": deal.owner_id,
+                "created_at": deal.created_at.isoformat() if deal.created_at else None,
+            },
+        )
+
+        return deal
 
     # --------------------------------------------------------
     # Atualização
@@ -240,8 +214,7 @@ class DealService:
     def update_deal(
         self, deal_id: str, payload: DealUpdate, current: CurrentUser
     ) -> Deal:
-        """Atualiza um deal existente."""
-        existing = self.get_deal(deal_id, current)  # já valida acesso
+        existing = self.get_deal(deal_id, current)
         data = payload.model_dump(
             mode="json", exclude_unset=True, exclude_none=True
         )
@@ -249,21 +222,17 @@ class DealService:
         if not data:
             return existing
 
-        # Valida custom_values se foram informados.
         if "custom_values" in data:
             data["custom_values"] = self.custom_validator.validate(
                 "deal", data["custom_values"] or {}
             )
 
-        # --- Validação de transição de status ---
         if "status" in data:
             self._validate_status_transition(existing.status, data["status"])
 
-        # --- Troca de pipeline exige reavaliar stage ---
         pipeline_id = data.get("pipeline_id", existing.pipeline_id)
 
         if "pipeline_id" in data:
-            # Se trocou o pipeline, valida que ele existe.
             if not self.pipeline_repo.get_by_id(pipeline_id):
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
@@ -273,13 +242,11 @@ class DealService:
         if "stage_id" in data:
             self._validate_pipeline_and_stage(pipeline_id, data["stage_id"])
 
-        # --- Efeitos automáticos de status ---
         if data.get("status") == "won":
             won_stage = self._resolve_stage_for_status(pipeline_id, "won")
             if won_stage:
                 data["stage_id"] = won_stage["id"]
             data["probability"] = 100
-
         elif data.get("status") == "lost":
             lost_stage = self._resolve_stage_for_status(pipeline_id, "lost")
             if lost_stage:
@@ -292,15 +259,46 @@ class DealService:
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Negócio não encontrado.",
             )
-        return Deal(**updated)
+        deal = Deal(**updated)
+
+        # Dispara webhook (deal.updated)
+        dispatch_event(
+            owner_id=current.id,
+            event="deal.updated",
+            payload={
+                "id": deal.id,
+                "lead_id": deal.lead_id,
+                "lead_name": deal.lead_name,
+                "status": deal.status,
+                "value": str(deal.value),
+                "stage_id": deal.stage_id,
+                "updated_fields": list(data.keys()),
+            },
+        )
+
+        # Dispara webhook adicional quando o status mudou
+        if "status" in data and data["status"] != existing.status:
+            dispatch_event(
+                owner_id=current.id,
+                event="deal.status_changed",
+                payload={
+                    "id": deal.id,
+                    "lead_id": deal.lead_id,
+                    "lead_name": deal.lead_name,
+                    "from_status": existing.status,
+                    "to_status": deal.status,
+                    "value": str(deal.value),
+                },
+            )
+
+        return deal
 
     # --------------------------------------------------------
     # Remoção
     # --------------------------------------------------------
 
     def delete_deal(self, deal_id: str, current: CurrentUser) -> None:
-        """Remove um deal."""
-        self.get_deal(deal_id, current)  # valida acesso
+        self.get_deal(deal_id, current)
         deleted = self.repo.delete(deal_id)
         if not deleted:
             raise HTTPException(

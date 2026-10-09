@@ -1,13 +1,5 @@
 """
 Serviço de Notas: regras de negócio.
-
-Regras de acesso:
-- Vendedor: só vê/edita notas de leads/deals que ele é dono.
-- Gerente/admin: veem tudo.
-
-Regras de edição:
-- O autor pode editar/deletar a própria nota.
-- Admin pode deletar qualquer nota.
 """
 
 from __future__ import annotations
@@ -22,6 +14,7 @@ from app.domains.notes.entities import (
     NoteUpdate,
 )
 from app.domains.notes.repository import NoteRepository
+from app.domains.webhooks.dispatcher import dispatch_event
 from app.shared.dependencies import CurrentUser
 
 
@@ -39,14 +32,10 @@ class NoteService:
         self.deal_repo = deal_repo or DealRepository()
 
     # --------------------------------------------------------
-    # Helpers de acesso
+    # Helpers
     # --------------------------------------------------------
 
     def _get_record(self, record_type: str, record_id: str) -> dict:
-        """
-        Busca o lead ou o deal referenciado.
-        Levanta 404 se não existir.
-        """
         if record_type == "lead":
             record = self.lead_repo.get_by_id(record_id)
             label = "Lead"
@@ -67,7 +56,6 @@ class NoteService:
         return record
 
     def _ensure_can_access(self, record: dict, current: CurrentUser) -> None:
-        """Admin/gerente: sempre. Vendedor: apenas se for o dono."""
         if current.can_see_all_leads:
             return
         if record.get("owner_id") != current.id:
@@ -77,7 +65,6 @@ class NoteService:
             )
 
     def _ensure_can_edit(self, note_data: dict, current: CurrentUser) -> None:
-        """Só o autor ou admin pode editar/deletar uma nota."""
         if current.is_admin:
             return
         if note_data.get("author_id") != current.id:
@@ -85,10 +72,6 @@ class NoteService:
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="Você só pode editar ou excluir as suas próprias notas.",
             )
-
-    # --------------------------------------------------------
-    # Enriquecimento (author_name)
-    # --------------------------------------------------------
 
     def _enrich_with_author(self, note: dict) -> Note:
         author_id = note.get("author_id")
@@ -115,7 +98,6 @@ class NoteService:
         record_id: str,
         current: CurrentUser,
     ) -> list[Note]:
-        """Lista notas de um lead/deal."""
         record = self._get_record(record_type, record_id)
         self._ensure_can_access(record, current)
         data = self.repo.list_by_record(record_type, record_id)
@@ -128,7 +110,6 @@ class NoteService:
     def create_note(
         self, payload: NoteCreate, current: CurrentUser
     ) -> Note:
-        """Cria uma nota."""
         record = self._get_record(payload.record_type, payload.record_id)
         self._ensure_can_access(record, current)
 
@@ -141,7 +122,24 @@ class NoteService:
         }
 
         created = self.repo.create(data)
-        return self._enrich_with_author(created)
+        note = self._enrich_with_author(created)
+
+        # Dispara webhook
+        dispatch_event(
+            owner_id=current.id,
+            event="note.created",
+            payload={
+                "id": note.id,
+                "record_type": note.record_type,
+                "record_id": note.record_id,
+                "content": note.content,
+                "author_id": note.author_id,
+                "author_name": note.author_name,
+                "created_at": note.created_at.isoformat() if note.created_at else None,
+            },
+        )
+
+        return note
 
     # --------------------------------------------------------
     # Atualizar
@@ -150,7 +148,6 @@ class NoteService:
     def update_note(
         self, note_id: str, payload: NoteUpdate, current: CurrentUser
     ) -> Note:
-        """Atualiza uma nota."""
         existing = self.repo.get_by_id(note_id)
         if not existing:
             raise HTTPException(
@@ -158,7 +155,6 @@ class NoteService:
                 detail="Nota não encontrada.",
             )
 
-        # Valida que o usuário pode acessar o registro
         record = self._get_record(
             existing["record_type"], existing["record_id"]
         )
@@ -190,7 +186,6 @@ class NoteService:
     # --------------------------------------------------------
 
     def delete_note(self, note_id: str, current: CurrentUser) -> None:
-        """Deleta uma nota."""
         existing = self.repo.get_by_id(note_id)
         if not existing:
             raise HTTPException(
