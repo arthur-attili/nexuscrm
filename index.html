@@ -87,12 +87,31 @@ table th{background:#f5f7f6}.table-scroll:focus-visible{outline:2px solid var(--
 .deal-actions select{min-width:0;flex:1}.deal-actions button,.deal-actions select{font-size:11px;min-height:31px;padding:4px 6px}
 @media(max-width:430px){.radial-layout{grid-template-columns:minmax(0,1fr)}.radial-canvas{max-width:150px;justify-self:center}.chart-bar-row strong{white-space:normal;text-align:right}.chart-controls{gap:4px}}
 .grip{touch-action:none;user-select:none;display:grid;place-items:center;min-width:26px;min-height:24px;flex:none}
+/* Approved visual concept */
+:root{--bg:#f5f5f2;--paper:#fff;--ink:#222823;--accent:#245f4c;--muted:#626963;--line:#e0e3de;--tint:#e5eee7}
+.shell{grid-template-columns:218px minmax(0,1fr)}.sidebar{background:#f9faf7;color:var(--ink);border-right:1px solid var(--line);padding:22px 12px;gap:25px}
+.brand{color:var(--ink);font-weight:700;font-size:20px}.mark{background:var(--accent);color:white;border-radius:4px;width:29px;height:29px}
+.workspace-label{padding-inline:8px;color:var(--muted);font-size:11px}.workspace-label strong{display:block;border:1px solid var(--line);border-radius:6px;background:white;color:var(--ink);margin-top:8px;padding:10px 9px;font-size:12px;font-weight:550}
+.nav-group small{color:var(--muted);text-transform:none;letter-spacing:0;font-size:11px;font-weight:500}
+.nav-group a{color:#414942;font-weight:450;gap:11px}.nav-group a:hover{background:#edf1eb;color:var(--ink)}.nav-group a[aria-current]{background:#dcebe1;color:#214d3b;font-weight:600}.glyph{color:inherit}
+.workspace{border-color:var(--line);color:var(--muted)}.workspace b{color:var(--ink)}.profile{display:flex;gap:9px;align-items:center;padding:14px 3px 0;font-size:11px}.avatar{display:grid;place-items:center;width:32px;height:32px;background:#deebe1;border-radius:50%;color:var(--accent);font-size:11px;font-weight:600}
+.top{min-height:56px;background:#fafbf8;padding:8px 26px}.top>span{font-weight:450;color:var(--muted)}.top select{font-size:11px}.content{padding:25px 25px 10px}
+.hero{align-items:center;margin-bottom:22px}.hero h1{font-size:31px;font-weight:650;letter-spacing:-.04em}.subtitle{font-size:12px}.hero button{font-size:12px;min-height:35px}
+.metrics{margin-inline:-25px;margin-bottom:20px;border-radius:0;border-left:0;border-right:0;padding:15px 10px}.metric{padding:0 17px;gap:6px}.metric>span{font-weight:450;font-size:12px}.metric>strong{font-family:Geist,system-ui,sans-serif;font-size:29px;letter-spacing:-.045em;font-weight:650;color:var(--ink)!important}.metric small{font-size:11px}
+.section{border-color:var(--line);border-radius:7px}.section-head{border-bottom:0;padding:16px 16px 5px}.section-head h2{font-weight:650;font-size:16px}.section-head a{font-weight:500;font-size:11px}
+.columns{grid-template-columns:minmax(0,1.65fr) minmax(255px,1fr);gap:16px}.chart{padding:10px 16px 15px}.chart-intro strong{font-family:Geist,sans-serif;font-size:26px;font-weight:600;letter-spacing:-.04em}.chart-controls{gap:8px}.chart-legend{font-size:10px}.chart-caption{font-size:10px;margin-top:9px}.plot{--chart-height:145px}
+.dashboard-bottom{margin-bottom:16px}.dashboard-bottom td,.dashboard-bottom th{padding:12px 11px;font-size:11px}.dashboard-bottom td:first-child{font-weight:550}.dashboard-bottom .mono{font-family:Geist,sans-serif;font-variant-numeric:tabular-nums}.dashboard-bottom .table-scroll{margin-top:10px}
+.agenda-list{list-style:none;margin:0;padding:8px 16px}.agenda-row{display:flex;align-items:center;gap:10px;padding:17px 0;border-bottom:1px solid var(--line)}.agenda-row:last-child{border:0}.agenda-row time{font:500 11px Geist;background:var(--bg);padding:5px;border-radius:4px;flex:none}.agenda-row div{min-width:0;flex:1}.agenda-row strong{font-size:12px;font-weight:600}.agenda-row small{display:block;margin-top:5px;font-size:10px;color:var(--muted)}.complete-task{border-radius:50%;width:24px;min-height:24px;padding:0;flex:none;color:var(--muted)}
+.stage-pill{display:inline-flex;gap:5px;align-items:center;background:var(--stage-paper);color:var(--stage);font-size:10px;padding:3px 6px;border-radius:5px}.stage-pill::before{content:"";width:5px;height:5px;background:var(--stage);border-radius:50%}
+.integration-strip{display:flex;gap:22px;flex-wrap:wrap;padding:13px 0;border-top:1px solid var(--line);font-size:10px}.integration-strip a{display:flex;align-items:center;gap:6px}.integration-strip a>span:last-child{color:var(--muted)}.connection-dot{width:6px;height:6px;border-radius:50%;background:#919991}.connection-dot.connected{background:#2b7a49}
+@media(max-width:1050px){.columns{grid-template-columns:minmax(0,1fr)}.metric>strong{font-size:24px}.metrics{row-gap:16px}.metric:nth-child(n+3){padding-top:12px}}
+@media(max-width:740px){.shell{grid-template-columns:minmax(0,1fr)}.sidebar{padding:12px 14px;gap:0}.workspace-label{display:none}.profile{display:none}.mobile-nav{background:white;color:var(--ink);border-color:var(--line)}.top{padding-inline:14px}.content{padding:18px 12px 10px}.metrics{margin-inline:-12px;padding:13px 0}.metric{padding-inline:12px}.metric>strong{font-size:22px}.hero h1{font-size:28px}.hero{gap:13px}.chart{padding:10px 12px}.plot{--chart-height:128px}.integration-strip{gap:10px}.compact-table td:nth-child(3){font-size:11px}.compact-table td:last-child{text-align:left;color:var(--muted);font-size:10px}}
 
 </style>
 </head>
 <body>
 <div class="shell">
-<aside class="sidebar"><a class="brand" href="#inicio"><span class="mark" aria-hidden="true">N</span>NexusCRM</a><nav id="nav" aria-label="Navegação principal"></nav><select id="mobile-nav" class="mobile-nav" aria-label="Ir para"></select><div class="workspace"><b>Estúdio Horizonte</b>Ambiente de demonstração</div></aside>
+<aside class="sidebar"><a class="brand" href="#inicio"><span class="mark" aria-hidden="true">N</span>NexusCRM</a><div class="workspace-label">Workspace<strong>Estúdio Horizonte</strong></div><nav id="nav" aria-label="Navegação principal"></nav><select id="mobile-nav" class="mobile-nav" aria-label="Ir para"></select><div class="workspace profile"><span class="avatar">AM</span><div><b>Ana Martins</b><span id="profile-label">Administradora</span></div></div></aside>
 <div><header class="top"><span>Estúdio Horizonte</span><div class="right"><span class="demo-tag">Demonstração</span><label><select id="role" aria-label="Perfil da demonstração"><option value="admin">Visão de admin</option><option value="seller">Visão de vendedor</option></select></label></div></header><main class="content" id="main"></main></div>
 </div>
 <dialog id="modal"><form id="editor"></form></dialog>
@@ -214,8 +233,8 @@ function rows(items, message) {
 }
 const chartTypes = ['Coluna','Barra','Linha','Pizza','Rosca'];
 const chartColors = ['#146753','#4775a8','#a76b1d','#795699','#a34b51','#477887','#6e783c','#815f42'];
-let chartPreferences = {};
-try { chartPreferences = JSON.parse(localStorage.getItem('nexus-chart-types')) ?? {}; } catch {}
+let chartPreferences = {sales:'Linha'};
+try { chartPreferences = JSON.parse(localStorage.getItem('nexus-chart-types')) ?? {sales:'Linha'}; } catch {}
 const chartDraws = new Map();
 
 function chart(key, groups, series, format, axisFormat, headline, defaultType='Coluna') {
@@ -229,7 +248,7 @@ function chart(key, groups, series, format, axisFormat, headline, defaultType='C
   const ticks = [limit,step*2,step,0];
   const radial = type==='Pizza' || type==='Rosca';
   const info = group => group.label+' · '+group.values.map((value,index)=>series[index]+': '+format(value)).join(' · ');
-  const initiallySelected = key==='sales' ? groups.length-1 : -1;
+  const initiallySelected = -1;
   const pointAttrs = (group,index) => {
     const summary = key==='sales' ? format(group.values[0]) :
       series.length===1 ? format(total(group)) : total(group)+' fechados';
@@ -343,13 +362,25 @@ function taskRows(tasks, allowCancel=false) {
   return rows(tasks.map(task=>'<div><strong>'+safe(task.title)+'</strong><small>'+safe(task.kind)+' · '+dateText(task.date)+' às '+safe(task.time)+(task.kind==='Reunião'&&db.connections.google?' · Google Calendar (simulado)':'')+'</small></div>'+(task.done?chip('Concluída',true):task.cancelled?chip('Cancelada'):'<div class="actions">'+button('Editar','edit-task',task.id)+button('Concluir','done',task.id)+(allowCancel?button('Cancelar','cancel-task',task.id):'')+'</div>')),'Nenhuma atividade nesta lista.');
 }
 function overview() {
-  const deals = visibleDeals(), open = deals.filter(isOpen), won = deals.filter(deal=>deal.stage==='Ganho' && deal.closed?.startsWith(today.slice(0,7)));
-  const tasks = pending();
-  return hero('Visão comercial','Resultados de novembro de 2026 e próximos passos da equipe.',button('Agendar atividade','new-task')+button('+ Novo lead','new-lead','',true))+
-    metrics([['Valor em aberto',money.format(sum(open)),open.length+' negócios em andamento'],['Valor ganho no mês',money.format(sum(won)),won.length+' negócios fechados'],['Leads na carteira',db.leads.filter(canSee).length,'Contatos no seu escopo'],['Atividades pendentes',tasks.length,'Na agenda comercial']])+
-    '<div class="columns analytics-grid">'+section('Desempenho comercial',performance(deals),'<a href="#relatorios">Ver relatórios →</a>')+section('Pipeline em aberto',pipelineChart(open),'<a href="#negocios">Ver funil →</a>')+'</div>'+
-    '<div class="columns"><div class="stack">'+section('Próximos fechamentos',table(['Empresa','Etapa','Fechamento','Valor'],open.slice().sort((a,b)=>a.date.localeCompare(b.date)).slice(0,5).map(deal=>[linkLead(leadFor(deal.lead)),chip(deal.stage),'<time>'+dateText(deal.date)+'</time>','<span class="mono">'+money.format(deal.amount)+'</span>']),'Nenhum fechamento previsto.',true),'<a href="#negocios">Ver negócios →</a>')+
-    section('Últimas interações',historyList(db.history.filter(item=>canSee(leadFor(item.lead))).slice().reverse().sort((a,b)=>b.date.localeCompare(a.date)).slice(0,4),true),'<a href="#caixa">Conversas →</a>')+'</div><div class="stack">'+section('Próximas atividades',taskRows(tasks.slice(0,3)),'<a href="#agenda">Abrir agenda →</a>')+'</div></div>';
+  const deals=visibleDeals(),open=deals.filter(isOpen);
+  const won=deals.filter(deal=>deal.stage==='Ganho'&&deal.closed?.startsWith(today.slice(0,7)));
+  const closed=deals.filter(deal=>!isOpen(deal)&&deal.closed?.startsWith(today.slice(0,7)));
+  const rate=closed.length?Math.round(won.length/closed.length*100)+'%':'—';
+  const tasks=pending();
+  const agenda=tasks.slice(0,3).map(task=>'<li class="agenda-row"><time>'+safe(task.time)+'</time><div><strong>'+safe(task.title)+'</strong><small>'+safe(leadFor(task.lead).company)+' · '+dateText(task.date)+'</small></div>'+
+    '<button type="button" class="complete-task" data-action="done" data-id="'+task.id+'" aria-label="Concluir '+safe(task.title)+'">✓</button></li>');
+  const closingRows=open.slice().sort((a,b)=>a.date.localeCompare(b.date)).slice(0,5).map(deal=>{
+    const lead=leadFor(deal.lead);
+    const stage=stages.indexOf(deal.stage);
+    return [linkLead(lead),'<span class="stage-pill stage-'+stageColors[stage]+'">'+safe(deal.stage)+'</span>',safe(lead.owner),'<span class="mono">'+money.format(deal.amount)+'</span>','<time>'+dateText(deal.date)+'</time>'];
+  });
+  return hero('Visão geral','Resultados de novembro de 2026 e próximos passos da equipe.',button('Agendar atividade','new-task')+button('+ Novo negócio','new-deal','',true))+
+    metrics([['Valor em aberto',money.format(sum(open)),open.length+' negócios em andamento'],['Valor ganho',money.format(sum(won)),won.length+' negócios fechados no mês'],['Taxa de ganho',rate,'Sobre negócios fechados no mês'],['Atividades pendentes',tasks.length,'Na agenda comercial']])+
+    '<div class="columns analytics-grid">'+section('Desempenho comercial',performance(deals),'<a href="#relatorios">Ver relatórios →</a>')+
+    section('Sua agenda',agenda.length?'<ul class="agenda-list">'+agenda.join('')+'</ul>':empty('Nenhuma atividade pendente.'),'<a href="#agenda">Abrir agenda →</a>')+'</div>'+
+    '<div class="columns dashboard-bottom">'+section('Próximos fechamentos',table(['Empresa','Etapa','Responsável','Valor','Previsão'],closingRows,'Nenhum fechamento previsto.',true),'<a href="#negocios">Ver negócios →</a>')+
+    section('Pipeline em aberto',pipelineChart(open),'<a href="#negocios">Ver funil →</a>')+'</div>'+
+    '<footer class="integration-strip">'+Object.entries(providers).map(([key,[name]])=>'<a href="#integracoes"><span class="connection-dot '+(db.connections[key]?'connected':'')+'"></span><b>'+name+'</b><span>'+ (db.connections[key]?'Conexão simulada':'Desconectada')+'</span></a>').join('')+'</footer>';
 }
 function leadResults() {
   const query = leadQuery.trim().toLocaleLowerCase('pt-BR');
@@ -431,6 +462,7 @@ function render() {
   const boardScroll=document.querySelector('.kanban')?.scrollLeft;
   chartObserver.disconnect();
   chartDraws.clear();
+  $('#profile-label').textContent=role==='admin'?'Administradora':'Vendedora';
   const [route='inicio',id] = location.hash.slice(1).split('/');
   const active = route==='lead'?'leads':route||'inicio';
   const available = pages.filter(([url])=>url!=='financeiro'||role==='admin');
